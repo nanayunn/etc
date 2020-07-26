@@ -1,10 +1,10 @@
-# F5 CIS 가이드 내용 요약 정리[¶](https://redmine.piolink.com/issues/72416#F5-CIS-가이드-내용-요약-정리)
+# F5 CIS 가이드 내용 요약 정리
 
 
 
 ## 1. F5 Container Ingress Services 개요
 
-**F5 CIS( F5 Container Ingress Services)**는.. 
+**F5 CIS( Container Ingress Services )**는.. 
 
 * 컨테이너 오케스트레이션 환경과 통합하여,
 
@@ -94,7 +94,7 @@
   * 장애 발생 시 서비스 중단 창 팝업
     * 활성화 되려는 Standby device와 FDB, ARP 레코드를 업데이트 하려는 BIG-IP 컨트롤러 사이에서 발생
     * 중단 시간 디폴트 값 : 30초
-      * 서비스 중단 시간을 단축시키려면 기본적인 원칙( 디바이스 하나 당 하나의 인스턴스 ) 만들 것.
+      * 서비스 중단 시간을 단축시키려면 기본적인 원칙( 디바이스 하나 당 하나의 인스턴스 )을 적용해야합니다.
 
   
 
@@ -621,8 +621,9 @@
      * Controller는 BIG-IP에서 구성한 IP 주소를 Route Domain 식별자로 선언할 수 있습니다 . 
      * 다수의 어플리케이션에 동일한 IP 주소 공간을 사용하여 별도의 파티셔닝이 필요한 경우, Route Domain을 이용할 수 있습니다. 
        * 1) BIG-IP 시스템에서 파티션을 생성 한 후 Route Domain을 생성하고
-       * 2) 라우트 도메인을 파티션의 기본값으로 할당합니다. 
-     * [옵션] BIG-IP HA 쌍 또는 클러스터를 사용하는 경우 그룹간의 변경 사항을 동기화하십시오.
+       * 2) Route Domain을 파티션의 기본값으로 할당합니다. 
+   * [옵션] 
+     * BIG-IP HA 쌍 또는 클러스터를 사용하는 경우 그룹간의 변경 사항을 동기화하십시오.
 3. BIG-IP 로그인 자격 증명을 Secret에 저장하세요.
 4. 개인 Docker 레지스트리에서 `k8s-bigip-ctlr`이미지를 가져와야 하는 경우, Docker 로그인 자격 증명을 Secret 형태로 저장하세요. 
 
@@ -776,26 +777,27 @@
      * Pod에 대한 HTTP 요청
      * Pod에 대한 명령 실행
      * Pod에 대한 TCP 요청
-     * d
-
-   * HTTP 메소드를 이용하는 Deployment의 예:
-
+   
+    
+   
+* HTTP 메소드를 이용하는 Deployment의 예:
+  
      | 파라미터            | 설명                                                         |
      | :------------------ | :----------------------------------------------------------- |
      | periodSeconds       | kubelet이 liveness probe 3초마다 수행하도록 지정             |
      | initialDelaySeconds | 첫번째 Probe를 수행하기 전에 kubelet에게 3초 대기를 알림     |
-     | timeOutSeconds      | Probe가 실행을 마칠 때 까지의 대기 시간.<br />지정해둔 시간이 초과되면, OpenShift 컨테이너 플랫폼의 경우, Probe가 실패하였다고 간주. |
-
-   * kubelet은 컨테이너의 Health check에 web hook을 이용합니다.
-
-   * HTTP 응답 코드가 `200`~`399` 사이에 있으면 체크에 성공한 것 입니다.
-
-   * Probe를 수행하기 위해, kubelet은 컨테이너에서 실행 중인 서버( 8080 port )에 HTTP GET 요청을 보냅니다.
-
-     * 서버의 / health 경로에 대한 핸들러는 성공 코드를 리턴합니다.
-
-   * 예 : 
-
+  | timeOutSeconds      | Probe가 실행을 마칠 때 까지의 대기 시간.<br />지정해둔 시간이 초과되면, OpenShift 컨테이너 플랫폼의 경우, Probe가 실패하였다고 간주. |
+  
+* kubelet은 컨테이너의 Health check에 web hook을 이용합니다.
+  
+* HTTP 응답 코드가 `200`~`399` 사이에 있으면 체크에 성공한 것 입니다.
+  
+* Probe를 수행하기 위해, kubelet은 컨테이너에서 실행 중인 서버( 8080 port )에 HTTP GET 요청을 보냅니다.
+  
+  * 서버의 / health 경로에 대한 핸들러는 성공 코드를 리턴합니다.
+  
+* 예 : 
+  
      ```yaml
      livenessProbe:
         failureThreshold: 3
@@ -817,16 +819,16 @@
         periodSeconds: 30
         successThreshold: 1
         timeoutSeconds: 15
-     ```
-
-     * deployed pod의 health check를 원한다면, 다음 명령을 입력하면 됩니다.
-
+  ```
+  
+  * deployed pod의 health check를 원한다면, 다음 명령을 입력하면 됩니다.
+  
        ```
        Kubectl describe pod <pod_name> -n kube-system
-       ```
-
-       * 결과
-
+    ```
+  
+    * 결과
+  
          ```yaml
          resources: {}
                  terminationMessagePath: /dev/termination-log
@@ -843,8 +845,8 @@
             Environment:   <none>
             Mounts:        <none>
          Volumes:          <none>
-         ```
-
+      ```
+  
      * `curl http://<self-ip>:<port no>/health` 명령어 수행시, `OK` 응답을 받을 수 있습니다.
 
 
@@ -897,9 +899,377 @@
 
 
 
+### 6. BIG-IP 객체 관리
+
+> Kubernetes에서 서비스 및 수신을 위한 BIG-IP 객체를 배포할 수 있습니다.
+>
+> BIG-IP 컨트롤러는 아래 표에 명시된대로 BIG-IP 객체를 생성, 업데이트, 제거 및 관리할 수 있습니다.
+
+![표](https://user-images.githubusercontent.com/58680504/88471651-9a344a80-cf46-11ea-939d-131478f82d42.png)
+
+> SSL 프로파일에 대한 BIG-IP 컨트롤러 지원은 리소스 유형에 따라 다릅니다.
+>
+> - F5 리소스 : 기존 클라이언트 SSL profile 사용
+> - Kubernetes Ingress : 기존 클라이언트 SSL profile 사용
+> - OpenShift Routes : 새 클라이언트 또는 서버 SSL profile을 생성, 또는 기존 클라이언트 또는 서버 SSL profile 사용
+>
+> **모든** profile에 대한 BIG-IP 컨트롤러 지원은 기본 profile 형식에만 적용됩니다. 
+>
+> 최적화 및 사용자 정의된 버전은 지원하지 않습니다.
+
+
+
+**객체 네이밍 규칙**
+
+* BIG-IP 컨트롤러는 모든 BIG-IP 가상 서버 객체에 대해 다음과 같이 명명합니다.
+  *  `[namespace]_[resource-name]`
+  * 예 : 
+    * namespace :  `default` 
+    * ConfigMap name : `k8s.vs`  일때, 
+    * object preface :  `default_k8s.vs_173.16.2.2:80`
+
+
+
+**HA( High-availability )와 Multi-tenancy**
+
+* 한 쌍의, 혹은 다수의 BIG-IP 디바이스를 사용하고 있다면,  **하나의 BIG-IP 디바이스 당 하나의 BIG-IP 컨트롤러**를 배포할 것을 권장합니다.
 
 
 
 
 
+### 7. 서비스에 Virtual Server 연결
+
+> F5 리소스를 사용하여 사용자 지정 BIG-IP 가상 서버를 Kubernetes 및 OpenShift의 서비스에 연결할 수 있습니다.
+
+
+
+* F5 리소스 ConfigMap
+
+  >  각각의 서비스를 외부 트래픽에 노출시켜줍니다.
+
+  * 특징 
+    * Ingresses 및 Routes 보다 뛰어난 유연성과 커스터마이징 옵션
+    * L4 수신 (TCP 또는 UDP).
+    * 비표준 포트에서 L7 수신. ( 예를 들면 8080 또는 8443 포트에서 )
+
+
+
+**서버 연결 순서**
+
+| 단계 | 작업                           |
+| :--- | :----------------------------- |
+| 1.   | 서비스를 위해 가상 서버 정의   |
+| 2.   | ConfigMap을 API 서버에 업로드  |
+| 3.   | BIG-IP 시스템의 변경 사항 확인 |
+
+
+
+**서비스를 위해 가상 서버 정의**
+
+* 생성하고 싶은 가상 서버를 F5 리소스의 JSON blob에 정의하세요.
+
+* 정의 후, Kubernetes ConfigMap 리소스의 **data** 섹션에 해당 JSON blob를 포함시킵니다.
+
+* ㅇ
+
+* HTTP 예시
+
+  * 서비스의 형태가 다음과 같다면, 
+
+  ```yaml
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: myService
+    labels:
+      app: myApp
+  spec:
+    ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 9376
+    type: clusterIP
+  ```
+
+  * HTTP ConfigMap의 형식은 다음과 같을 것 입니다.
+
+  ```yaml
+  kind: ConfigMap
+  apiVersion: v1
+  metadata:
+    name: myApp.vs
+    labels:
+      f5type: virtual-server
+  data:
+    # https://clouddocs.f5.com/containers/latest/releases_and_versioning.html#f5-schema
+    schema: "f5schemadb://bigip-virtual-server_v0.1.7.json"
+    data: |
+      {
+        "virtualServer": {
+          "backend": {
+            "servicePort": 80,
+            }
+          },
+          "frontend": {
+            "virtualAddress": {
+              "port": 8080,
+              "bindAddr": "1.2.3.4"
+            },
+            "partition": "k8s",
+            "balance": "least-connections-member",
+            "mode": "http"
+          }
+        }
+  ```
+
+* F5 리소스 옵션
+
+  * ConfigMap의 servicePort 옵션은 Service의 port 옵션과 맵핑됩니다.
+  * BIG-IP 컨트롤러는 Pod 노드의 포트와 BIG-IP 가상 서버의 엔드 포인트를 연결할 때 이 옵션을 사용합니다.
+  * Service의 targetPort의 옵션값은 사용자가 트래픽을 전송하고 싶은 Pod나 컨테이너의 포트에 해당합니다.
+  * 사용자는 balance: round-robin의 옵션값을 지원되는 BIG-IP 로드 밸런싱 모드 중 하나로 변경할 수 있습니다.
+
+
+
+**ConfigMap을 API 서버에 업로드**
+
+* 하나의 동일한 서버에 HTTP와 HTTPS 가상 서버를 생성하고 싶다면, 
+  * 각각의 포트에 ConfigMap를 생성하면 됩니다.
+  * 1. `apply` 옵션에서 YAML 파일 두 개를 이용하여 name을 전달하거나, 
+  * 2. 단일 manifest 파일에 두 리소스에 대한 내용을 모두 포함시킬 수 있습니다.
+
+
+
+* Kubernetest 서비스를 이용할 경우
+
+  * namespace의 default값에 해당하지 않는 리소스를 업로드하고자 할 때,
+
+    *  `--namespace`(또는 `-n`) 플래그를 사용하여 올바른 namespace를 지정하십시오 .
+
+    ```
+    kubectl apply -f <filename.yaml> [--namespace=<resource-namespace>]
+    ```
+
+* OpenShift 서비스를 이용할 경우
+
+  * default 값에 해당하지 않거나, 현재 진행중인 프로젝트 내에 없는 리소스를 업로드하고자 할 때,
+
+    *  `--namespace`(또는 `-n`) 플래그를 사용하여 올바른 프로젝트를 지정하십시오.
+
+    ```
+    oc apply -f <filename.yaml> [--namespace=<resource-project>]
+    ```
+
+
+
+**BIG-IP 시스템의 변경 사항 확인**
+
+> BIG-IP 객체의 생성, 변경, 삭제에 대한 검증을 위해
+>
+> * BIG-IP configuration 유틸리티를 이용하거나,
+> * TMOS 쉘을 이용할 수 있습니다.
+
+
+
+* Configuration 유틸리티를 이용 시:
+
+  * Local Traffic의 Virtual Servers 메뉴에 가서,
+  * Partition 드롭다운 메뉴에서 올바른 파티션을 선택하면 됩니다.
+
+  
+
+* TMOS 쉘 이용 시 : ( 콘솔 이용 예시 )
+
+```
+admin@(bigip)(cfg-sync Standalone)(Active)(/Common) cd my-partition
+admin@(bigip)(cfg-sync Standalone)(Active)(/my-partition) tmsh
+admin@(bigip)(cfg-sync Standalone)(Active)(/my-partition)(tmos)$ show ltm virtual
+------------------------------------------------------------------
+Ltm::Virtual Server: default_myApp.vs_173.16.2.2_80
+------------------------------------------------------------------
+Status
+  Availability     : available
+  State            : enabled
+  Reason           : The virtual server is available
+  CMP              : enabled
+  CMP Mode         : all-cpus
+  Destination      : 173.16.2.2:80
+...
+Ltm::Virtual Server: default_myApp.vs_173.16.2.2_443
+------------------------------------------------------------------
+Status
+  Availability     : available
+  State            : enabled
+  Reason           : The virtual server is available
+  CMP              : enabled
+  CMP Mode         : all-cpus
+  Destination      : 173.16.2.2:443
+...
+```
+
+
+
+* 서비스를 제거할 때
+  * API 서버의 ConfigMap과 관련된 서비스를 제거하고자 할 때, BIG-IP 컨트롤러가 서비스와 관련된 BIG-IP 객체를 제거할 것 입니다.
+  * 이후, 서비스와 관련된 F5 리소스 ConfigMap을 제거하여 주십시오.
+* 서비스를 대체할 때
+  * 새로운 서비스의 요구조건에 맞는 새로운 F5 리소스 ConfigMap을 생성하여야 합니다.
+
+
+
+### 8. BIG-IP 컨트롤러를 수신 컨트롤러로 사용하기 
+
+> * Kubernetes 용 BIG-IP 컨트롤러를 Kubernetes에서 Ingress 컨트롤러로 사용할 수 있습니다 . 
+>
+> * BIG-IP 컨트롤러의 Ingress 주석은 BIG-IP 시스템에서 필요한 트래픽 관리 객체를 정의합니다.
+
+
+
+* helm을 이용한다면,  `f5-bigip-ingress chart`를 이용하여 리소스를 생성 및 관리할 수 있습니다.
+  * BIG-IP 자체의 리소스를 생성 및 관리하고자 한다면, F5 Helm 차트를 이용하면 됩니다.
+
+
+
+**컨트롤러 설정 가이드**
+
+| 단계 | 기술                                        |
+| :--- | :------------------------------------------ |
+| 1.   | 가상 서버에 대한 BIG-IP self IP 주소를 생성 |
+| 2.   | Ingress에 리소스를 사용하여 주석을 추가     |
+| 3.   | Health 모니터링                             |
+| 4.   | API 서버에 Ingress 업로드                   |
+| 5.   | BIG-IP 시스템에서 객체 생성 여부 확인       |
+
+
+
+**초기 설정 셋팅( 가상 서버에 대한 BIG-IP self IP 주소를 생성 )**
+
+>  컨트롤러에 default IP 주소를 할당했거나, host IP 주소를 DNS 조회를 이용하여 확인하는 경우 이 단계를 건너뛰십시오.
+
+* BIG-IP 시스템의 외부 네트워크에서 자체 IP 주소 를 할당하세요.
+* 할당한 후, 해당 IP 주소를 Ingress 리소스에 할당합니다. 
+  * 클러스터 모드 에서 BIG-IP 컨트롤러를 실행하는 경우, IP 주소는 **BIG-IP VXLAN 터널에 할당된 서브넷 내에** 있어야합니다 .
+
+
+
+* unattached  pool을 만들려면 `Pools without virtual servers`옵션 상태의 pool을 참조하십시오 .
+
+
+
+**주석 추가**
+
+1. **`kubectl`을 이용**
+   * 기존의 Ingress에 지원되는 Ingress 주석을 추가하고 싶다면, `kunectl 주석`을 사용하세요.
+   * 모든 키-값 쌍을 단일 **kubectl 주석** 명령에 포함시키면 
+     * BIG-IP 시스템의 부분 업데이트를 피할 수 있습니다.
+
+* 다음 설정값을 바탕으로 한 예시를 참고하세요.
+
+  * Ingress class : f5
+    * 다른 컨트롤러와의 충돌을 피하기 위함
+  * default IP : `k8s-bigip-ctlr Deployment`내의 주소
+  * Listening port : 443
+  * 파티션 : "k8s"
+  * [옵션] : 라운드 로빈 로드 밸런싱
+  * [옵션] : BIG-IP pool health monitor
+  * [옵션] : HTTP 요청을 HTTPS로 리디렉션
+  * [옵션] : HTTP 요청 거부
+
+  
+
+  * kubectl 주석 작성 예제
+
+  ```
+  kubectl annotate ingress myingress kubernetes.io/ingress.class="f5" \
+                                     virtual-server.f5.com/ip="controller-default" \
+                                     virtual-server.f5.com/http-port="443" \
+                                     virtual-server.f5.com/partition="k8s" \
+                                     virtual-server.f5.com/balance="round-robin" \
+                                     virtual-server.f5.com/health='[{"path": "svc1.example.com/app1", "send": "HTTP GET /health/svc1", "interval": 5, "timeout": 10}]' \
+                                     ingress.kubernetes.io/ssl-redirect="true" \
+                                     ingress.kubernetes.io/allow-http="false"
+  ```
+
+  
+
+2. `Ingress 리소스`를 이용
+
+   * Ingress 주석 작성 예제
+
+   ```yaml
+   apiVersion: extensions/v1beta1
+   kind: Ingress
+   metadata:
+     name: myingress
+     annotations:
+       nginx.ingress.kubernetes.io/rewrite-target: /
+       kubernetes.io/ingresslass: "f5"
+       virtual-server.f5.com/ip: "controller-default"
+       virtual-server.f5.com/http-port: "443"
+       virtual-server.f5.com/partition: "k8s"
+       virtual-server.f5.com/balance: "round-robin"
+       virtual-server.f5.com/health: '[{"path": "svc1.example.com/app1", "send": "HTTP GET /health/svc1", "interval": 5, "timeout": 10}]'
+       ingress.kubernetes.io/ssl-redirect: "true"
+       ingress.kubernetes.io/allow-http: "false"
+   spec:
+     rules:
+     - http:
+         paths:
+         - path: /testpath
+           backend:
+             serviceName: test
+             servicePort: 80
+   ```
+
+   
+
+
+
+**Health monitor 세팅**
+
+>  Kubernetes Ingress 리소스를 위해 가상 서버에 health monitor을 추가, 혹은 업데이트를 원한다면  `virtual-server.f5.com/health` 주석을 사용하세요.
+
+* Health monitor 주석 작성 예제
+
+```yaml
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ing1
+  namespace: default
+  annotations:
+    virtual-server.f5.com/ip: "controller-default"
+    virtual-server.f5.com/partition: "k8s"
+    virtual-server.f5.com/health: |
+      [
+        {
+          "path":     "svc1.example.com/app1",
+          "send":     "HTTP GET /health/app1",
+          "interval": 5,
+          "timeout":  10
+        }, {
+          "path":     "svc2.example.com/app2",
+          "send":     "HTTP GET /health/app2",
+          "interval": 5,
+          "timeout":  5
+        }
+      ]
+spec:
+  rules:
+  - host: svc1.example.com
+    http:
+      paths:
+      - backend:
+          serviceName: svc1
+          servicePort: 8080
+        path: /app1
+  - host: svc2.example.com
+    http:
+      paths:
+      - backend:
+          serviceName: svc2
+          servicePort: 9090
+        path: /app2
+```
 
