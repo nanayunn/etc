@@ -344,5 +344,14 @@ $ sudo apt install ansible
 
 
 
+## 7. Ansible test2( Ansible과 Docker로 실습  )
+
+* 환경
+    * VirtualBox 가상 서버
+    * 설치 및 활용 프로그램
+        * Vagrant, Docker, Ansible
+ * 테스트 목표
+     * 로컬 서버와 가상서버로 진행했던 playbook 테스트를 가상서버와 여러 개의 도커 컨테이너에서 진행해보기
+
 
 
