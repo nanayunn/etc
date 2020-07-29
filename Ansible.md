@@ -94,12 +94,16 @@
 
 ## 4. Ansible 구성요소
 
+![img](https://blog.kakaocdn.net/dn/cuOWvb/btqCDkueHqy/MHnXKUDOig9gHdkuQNiFD0/img.png)
+
+
+
 * Inventory : 
 
   > ‘어디에서’ 앤서블을 실행하는가
 
-  * 관리되는 노드의 목록
-  * 호스트 파일이라고도 한다. 
+  * 관리되는 노드의 목록( 원격 서버들의 목록 )
+  * 호스트 파일이라고도 한다. ( /etc/ansible/hosts 파일 )
     * 인벤토리는 관리되는 노드에 대한 각각의 IP주소와 같은 정보를 지정
     *  관리 노드를 구성하여 쉽게 확장 가능하도록 그룹을 만들고 중첩시킬 수 있다. 
 
@@ -124,6 +128,8 @@
 * Play-book : 
 
   > ‘어떻게’ 앤서블을 실행하는가
+
+  * 원격 서버에 전달할 명령들을 모아둔 명령집
 
   * 변수 및 task를 관리 호스트에 수행하기 위해 yaml 문법으로 정의된 파일
   * 반복해서 실행하고자 해당 작업을 실행 순서대로 저장해 놓은 정렬된 작업 리스트
@@ -160,17 +166,9 @@ $ sudo apt install ansible
 
   - Ansible은 인벤토리에서 관리하려는 머신에 대한 정보를 읽는다.
 
-  
-
 - 일반적으로 SSH를 통해 해당 시스템 (or 네트워크 장치 or 기타 관리 노드)에 연결한다.
 
 - 하나 이상의 모듈을 원격 시스템에 복사하고, 거기서 실행을 시작한다.
-
-
-
-
-
-
 
 
 
@@ -183,7 +181,166 @@ $ sudo apt install ansible
 
 
 
+### VirtualBox 가상 서버와 로컬 서버로 ansible 실습
 
+
+
+#### 1. ping 테스트
+
+
+
+**가상 서버**
+
+1. 호스트(로컬)과 통신하기 위해 호스트 어댑터를 이용 
+   * enp0s8 netplan 설정으로 IP를 할당해야함.
+   * ip 목록 확인
+
+<img src="https://user-images.githubusercontent.com/58680504/88760644-707a5e00-d1a8-11ea-9e7b-a9d10b441883.png" alt="스크린샷, 2020-07-29 13-54-39"  />
+
+
+
+2. enp0s3의  /etc/netplan/50-clound-init.yml 파일 내용
+
+![스크린샷, 2020-07-29 13-55-06](https://user-images.githubusercontent.com/58680504/88760645-7112f480-d1a8-11ea-9a29-a063d31e0403.png)
+
+
+
+3. enp0s8을 위해 새롭게 /etc/netplan/01-netcfg.yml 파일 생성,
+   * 아래의 내용을 작성. 
+   * 인터페이스에 적용한 호스트 어댑터 gateway는 ( 192.168.56.1 /24 )  
+
+![스크린샷, 2020-07-29 13-55-28](https://user-images.githubusercontent.com/58680504/88760647-7112f480-d1a8-11ea-976e-1b6213aad9f4.png)
+
+
+
+4. 파일을 생성, 내용을 모두 작성한 후 다음 명령어를 입력
+
+![스크린샷, 2020-07-29 13-55-50](https://user-images.githubusercontent.com/58680504/88760649-71ab8b00-d1a8-11ea-94cc-9009f9a59ee5.png)
+
+
+
+5. `ifconfig -a` 로 enp0s8 인터페이스에 ip가 할당된 것을 볼 수 있다.
+
+![스크린샷, 2020-07-29 13-56-09](https://user-images.githubusercontent.com/58680504/88760650-71ab8b00-d1a8-11ea-8bf5-46500aafc643.png)
+
+
+
+6. 가상서버에도 `sudo apt-get install ssh`, 혹은 `sudo apt-get install openssh-server`을 설치해 준다.
+   * 나는 `.ssh` 폴더를 삭제해버려서.. 다시.. 만듦..
+
+![스크린샷, 2020-07-29 13-56-51](https://user-images.githubusercontent.com/58680504/88760651-72442180-d1a8-11ea-9ef9-336935edd93b.png)
+
+
+
+**로컬**
+
+7. 로컬 서버에서 ssh 설치 후, 퍼블릭 키 생성
+
+![스크린샷, 2020-07-29 13-51-29](https://user-images.githubusercontent.com/58680504/88760635-6e180400-d1a8-11ea-88b5-1c831907b57e.png)
+
+
+
+8. 퍼블릭 키 생성 확인
+
+![스크린샷, 2020-07-29 13-51-48](https://user-images.githubusercontent.com/58680504/88760638-6eb09a80-d1a8-11ea-96db-6e7f1f5574dc.png)
+
+
+
+9. key를 가상서버에 복사한다.
+
+![스크린샷, 2020-07-29 13-53-22](https://user-images.githubusercontent.com/58680504/88760640-6f493100-d1a8-11ea-8caf-215f11ef266b.png)
+
+
+
+10. 이후, `/etc/ansible/hosts` 파일을 `sudo` 권한으로 열어서 가상서버의 ip `192.168.56.100`을 적어준다.
+
+
+
+**가상 서버**
+
+11. `~/` 위치로 가면 ssh 키가 복사되어 있는 것을 볼 수 있다. 키를 `~/.ssh/authorized_keys`로 복사한다.
+
+![스크린샷, 2020-07-29 13-57-03](https://user-images.githubusercontent.com/58680504/88760653-72dcb800-d1a8-11ea-95ec-b0967b5beb94.png)
+
+
+
+**로컬**
+
+12. 그냥 실행 시 `root` 의 계정으로 실행이 되기 때문에 그냥하면 실패한다.
+    * `--user=<user id>` 옵션을 붙여주면 제대로 ping 모듈이 실행되는 것을 볼 수 있다.
+
+![스크린샷, 2020-07-29 13-53-38](https://user-images.githubusercontent.com/58680504/88760641-6fe1c780-d1a8-11ea-8619-690f62e59b52.png)
+![스크린샷, 2020-07-29 13-53-47](https://user-images.githubusercontent.com/58680504/88760643-707a5e00-d1a8-11ea-8839-a08cf350ff4e.png)
+
+
+
+
+
+#### 2. playbook 작성을 통한 테스트
+
+##### 2-1. ping 테스트
+
+13. `YAML` 파일 작성이 `sudo` 권한으로만 된다...
+
+![스크린샷, 2020-07-29 14-10-00](https://user-images.githubusercontent.com/58680504/88760656-73754e80-d1a8-11ea-99d3-b06e6eadc4e0.png)
+
+
+
+14. `test.yml` 파일에는 다음과 같이 적었다.
+
+![스크린샷, 2020-07-29 14-10-50](https://user-images.githubusercontent.com/58680504/88760663-74a67b80-d1a8-11ea-84e0-0347d9b38eab.png)
+
+(처음에 `hosts` 설정값을 가상서버의 서버이름`controller`로 작성하였더니 실행이 안되는 부분)
+
+![스크린샷, 2020-07-29 14-10-28](https://user-images.githubusercontent.com/58680504/88760658-740de500-d1a8-11ea-8deb-151f77e8895a.png)
+
+
+
+15. `/etc/ansible/hosts` 파일에 적은 가상서버의 IP 값을 적고 실행하면 제대로 실행된다.
+
+![스크린샷, 2020-07-29 14-10-39](https://user-images.githubusercontent.com/58680504/88760660-740de500-d1a8-11ea-94bf-381f809bcbda.png)
+
+
+
+##### 2-2. Create User 테스트
+
+
+
+16. 이번에는 `test.yml` 파일 내용을 다음과 같이 바꾼다.
+
+![스크린샷, 2020-07-29 14-13-42](https://user-images.githubusercontent.com/58680504/88760664-74a67b80-d1a8-11ea-9fe5-65f9a7237b4d.png)
+
+
+
+17. 그냥 실행했더니 권한이 없어서 실행이 안된다.( Permission Denied )
+
+![스크린샷, 2020-07-29 14-14-14](https://user-images.githubusercontent.com/58680504/88760665-753f1200-d1a8-11ea-90ac-2c9b58afe27d.png)
+
+
+
+
+
+18. `become: yes` 옵션으로 해당 task 실행에 `sudo` 권한을 주었다.
+
+![스크린샷, 2020-07-29 14-15-20](https://user-images.githubusercontent.com/58680504/88760667-75d7a880-d1a8-11ea-8dd8-4e3db7824271.png)
+
+
+
+19. `-K` 옵션을 주면 `sudo` 권한 부여에 대한 패스워드를 치게 한다.
+    * 새로운 유저가 생성되었으므로 `changed = 1`이 표시된 값을 볼 수 있다.
+
+![스크린샷, 2020-07-29 14-17-05](https://user-images.githubusercontent.com/58680504/88760668-75d7a880-d1a8-11ea-8b7a-1578186da9c4.png)
+
+
+
+20. 진짜 생성되었는지 보기 위해서 해당 명령어 실행
+    * `/etc/passwd` : 서버 내에 사용자 목록이 적혀있는 파일
+
+![스크린샷, 2020-07-29 14-22-54](https://user-images.githubusercontent.com/58680504/88760670-7708d580-d1a8-11ea-98db-9bd3e75e6b10.png)
+
+21. `ansible_user`가 생성되어 있는 것을 볼 수 있다. 
+
+![스크린샷, 2020-07-29 14-22-39](https://user-images.githubusercontent.com/58680504/88760669-7708d580-d1a8-11ea-9368-9cea27d9b2f5.png)
 
 
 
