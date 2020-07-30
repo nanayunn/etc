@@ -344,6 +344,10 @@ $ sudo apt install ansible
 
 
 
+
+
+
+
 ## 7. Ansible test2( Ansible과 Docker로 실습  )
 
 * 환경
@@ -352,6 +356,83 @@ $ sudo apt install ansible
         * Vagrant, Docker, Ansible
  * 테스트 목표
      * 로컬 서버와 가상서버로 진행했던 playbook 테스트를 가상서버와 여러 개의 도커 컨테이너에서 진행해보기
+
+
+
+* 참고 사이트 : 
+  * https://dev-yakuza.github.io/ko/environment/vagrant-install-and-usage/
+
+
+
+#### 테스트 진행 순서
+
+1. VirtualBox
+
+   * 6.1 최신버전으로 재설치
+
+   * `sudo apt-get remove virtualbox`
+
+     * 의존성 오류 발생 시:
+       * `sudo apt --fix-broken install`
+
+   * `sudo dpkg -i virtualbox 6.1 deb 패키지`
+
+     * 필요시 `sudo apt install gdebi`
+     * `sudo apt-get -f install`
+
+     
+
+2.  Vagrant
+
+   * **Vagrant 초기화하고 싶다면**
+     * vagrant 실행 파일이 존재하는 곳에 `.vagrant`가 있는지 확인 및 삭제
+     * `/opt/vagrant`가 있는지 확인 및 삭제
+     * `/usr/bin/vagrant`가 있는지 확인 및 삭제
+     * `~/vagrant.d`가 있는지 확인 및 삭제( `sudo` )
+
+   * Linux는 zip 파일로 존재
+
+     * `unzip` 실행 시 실행 프로그램 번들이 나오는데, 설치 방법을 알아내지 못함.
+       * `./vagrant`로 프로그램 실행
+
+   * vagrant 전용 폴더를 생성하여 진행함
+
+     * `mkdir vagrant`
+
+   * `./vagrant init`
+
+   * 공식 box와 user box를 추가해야한다.
+
+     * 공식 box 사이트: https://app.vagrantup.com/boxes/search
+     * 유저 box 사이트: http://www.vagrantbox.es/
+
+   * 공식 box 추가
+
+     * `./vagrant box add ubuntu/bionic64`
+
+   * user box 추가
+
+     * `./vagrant box add bento/ubuntu 16.04`
+
+     > * 생성된 box 확인
+     >   * `./vagrant box list`
+     > * 생성된 box 삭제
+     >   * `./vagrant remove box bento/ubuntu-16.04`
+
+   * 가상 머신 생성
+
+     * `./vagrant up`
+
+   * 가상 머신 접속
+
+     * `./vagrant ssh`
+     * 로그아웃 : `exit`
+
+
+
+
+
+
 
 
 
