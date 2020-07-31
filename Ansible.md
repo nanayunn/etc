@@ -366,73 +366,212 @@ $ sudo apt install ansible
 
 #### 테스트 진행 순서
 
-1. VirtualBox
+#### 1. VirtualBox
 
-   * 6.1 최신버전으로 재설치
+* 6.1 최신버전으로 재설치
 
-   * `sudo apt-get remove virtualbox`
+* `sudo apt-get remove virtualbox`
 
-     * 의존성 오류 발생 시:
-       * `sudo apt --fix-broken install`
+  * 의존성 오류 발생 시:
+    * `sudo apt --fix-broken install`
 
-   * `sudo dpkg -i virtualbox 6.1 deb 패키지`
+* `sudo dpkg -i virtualbox 6.1 deb 패키지`
 
-     * 필요시 `sudo apt install gdebi`
-     * `sudo apt-get -f install`
+  * 필요시 `sudo apt install gdebi`
+  * `sudo apt-get -f install`
 
-     
+  
 
-2.  Vagrant
+#### 2. Vagrant
 
-   * **Vagrant 초기화하고 싶다면**
-     * vagrant 실행 파일이 존재하는 곳에 `.vagrant`가 있는지 확인 및 삭제
-     * `/opt/vagrant`가 있는지 확인 및 삭제
-     * `/usr/bin/vagrant`가 있는지 확인 및 삭제
-     * `~/vagrant.d`가 있는지 확인 및 삭제( `sudo` )
+* **Vagrant 초기화하고 싶다면**
+  * vagrant 실행 파일이 존재하는 곳에 `.vagrant`가 있는지 확인 및 삭제
+  * `/opt/vagrant`가 있는지 확인 및 삭제
+  * `/usr/bin/vagrant`가 있는지 확인 및 삭제
+  * `~/vagrant.d`가 있는지 확인 및 삭제( `sudo` )
 
-   * Linux는 zip 파일로 존재
+* Linux는 zip 파일로 존재
 
-     * `unzip` 실행 시 실행 프로그램 번들이 나오는데, 설치 방법을 알아내지 못함.
-       * `./vagrant`로 프로그램 실행
+  * `unzip` 실행 시 실행 프로그램 번들이 나오는데, 설치 방법을 알아내지 못함.
+    * `./vagrant`로 프로그램 실행
 
-   * vagrant 전용 폴더를 생성하여 진행함
+* vagrant 전용 폴더를 생성하여 진행함
 
-     * `mkdir vagrant`
+  * `mkdir vagrant`
 
-   * `./vagrant init`
+* `./vagrant init`
 
-   * 공식 box와 user box를 추가해야한다.
+* 공식 box와 user box를 추가해야한다.
 
-     * 공식 box 사이트: https://app.vagrantup.com/boxes/search
-     * 유저 box 사이트: http://www.vagrantbox.es/
+  * 공식 box 사이트: https://app.vagrantup.com/boxes/search
+  * 유저 box 사이트: http://www.vagrantbox.es/
 
-   * 공식 box 추가
+* 공식 box 추가
 
-     * `./vagrant box add ubuntu/bionic64`
+  * `./vagrant box add ubuntu/bionic64`
 
-   * user box 추가
+* user box 추가
 
-     * `./vagrant box add bento/ubuntu 16.04`
+  * `./vagrant box add bento/ubuntu 16.04`
 
-     > * 생성된 box 확인
-     >   * `./vagrant box list`
-     > * 생성된 box 삭제
-     >   * `./vagrant remove box bento/ubuntu-16.04`
+  > * 생성된 box 확인
+  >   * `./vagrant box list`
+  > * 생성된 box 삭제
+  >   * `./vagrant remove box bento/ubuntu-16.04`
 
-   * 가상 머신 생성
+* 가상 머신 생성
 
-     * `./vagrant up`
+  * `./vagrant up`
 
-   * 가상 머신 접속
+* 가상 머신 접속
 
-     * `./vagrant ssh`
-     * 로그아웃 : `exit`
-
-
+  * `./vagrant ssh`
+  * 로그아웃 : `exit`
 
 
 
+* vagrant를 ansible playbook으로 설정 관리했을 때 가장 해결하기 어려웠던 오류..
+  * python-apt에 대한 dependency 오류,
+  * 이로 인한 apt cache update 불가 오류
+  * python3.6 버전 설치를 위해 PPA repository를 추가하여 설치를 시도하였으나
+    * 1. 릴리즈 버전 파일이 해당 사이트에 없으며, 접근 불가능하다는 오류
+      2. 실제로 페이지에 가니 상업적 용도를 막기위해 모든 파일을 public 접근을 막았다는 글을 볼 수 있었다. 
+      3. ppa:deadsnakes/ppa 경로에는 파일이 존재하지만, 
+         * ansible playbook 내에서는 계속해서 경로를 찾지 못하고 실패하였음
+      4. ansible playbook이 아니라 vagrant 설정 파일 아래에 직접 명령어로 넣어줬다.
+         * 설치를 위해서는 `add-apt-repository` 명령어가 필요한데,  
+         * ansible의 apt, apt_repository 모듈 내에는 해당 명령어가 없음
+      5. 생각보다 중간에 누락되는 패키지 요소가 많아서 계속 `--fix-missing` 명령문을 중간에 넣어줘야 했다.
+* python 관련 라이브러리 및 프로그램 설치와 관련된 오류들
+
+![스크린샷, 2020-07-31 14-14-41](https://user-images.githubusercontent.com/58680504/89006772-6be9ad00-d342-11ea-9868-1a78fdcf4af1.png)
+
+![스크린샷, 2020-07-31 15-15-35](https://user-images.githubusercontent.com/58680504/89006776-6d1ada00-d342-11ea-82e6-b24063e560b5.png)
+
+![스크린샷, 2020-07-31 15-16-30](https://user-images.githubusercontent.com/58680504/89006779-6d1ada00-d342-11ea-9d16-58a02265ba36.png)
+
+![스크린샷, 2020-07-31 15-17-01](https://user-images.githubusercontent.com/58680504/89006782-6db37080-d342-11ea-81b2-4a83bb5f9f1d.png)
+
+![스크린샷, 2020-07-31 15-17-28](https://user-images.githubusercontent.com/58680504/89006784-6e4c0700-d342-11ea-94e2-03ac9c72d054.png)
 
 
 
+* ansible-playbook 실행이 모두 제대로 완료된 모습이다.
+
+![스크린샷, 2020-07-31 15-19-38](https://user-images.githubusercontent.com/58680504/89006785-6e4c0700-d342-11ea-852e-248345e7719c.png)
+
+
+
+* 생성된 가상머신 접속
+
+![스크린샷, 2020-07-31 15-19-52](https://user-images.githubusercontent.com/58680504/89006787-6ee49d80-d342-11ea-9dc7-e1c66e99c7f9.png)
+
+
+
+* 설치된 파이썬 버전 및 파이썬3.6 확인
+
+![스크린샷, 2020-07-31 15-20-02](https://user-images.githubusercontent.com/58680504/89006788-6f7d3400-d342-11ea-9897-bd96c675b886.png)
+
+* ansible 설치 확인
+
+![스크린샷, 2020-07-31 15-20-14](https://user-images.githubusercontent.com/58680504/89006789-7015ca80-d342-11ea-8570-b47b8a2dc289.png)
+
+
+
+* 호스트( 로컬 )와 마운트한 폴더가 잘 작동하는지 확인
+
+![스크린샷, 2020-07-31 15-20-23](https://user-images.githubusercontent.com/58680504/89006791-70ae6100-d342-11ea-96d9-2e44d9bddccc.png)
+
+
+
+* playbook으로 설치한 기타 프로그램이 잘 설치되었는지 확인( git, unzip..) 
+
+![스크린샷, 2020-07-31 15-20-34](https://user-images.githubusercontent.com/58680504/89006794-7146f780-d342-11ea-850a-4223c4e176e8.png)
+
+
+
+* `Vagrantfile` 생성할 가상머신에 대한 설정파일
+
+![스크린샷, 2020-07-31 15-23-49](https://user-images.githubusercontent.com/58680504/89006797-7146f780-d342-11ea-9b58-bd22cd89aabd.png)
+
+
+
+* `ansible-playbook`을 실행하기 위한 `main.yml` 파일
+
+![스크린샷, 2020-07-31 15-24-23](https://user-images.githubusercontent.com/58680504/89006798-72782480-d342-11ea-82cd-01f89730f079.png)
+
+
+
+
+
+#### 3. Docker와 Ansible, Vagrant
+
+* 추가적으로 Docker 파일을 ansible 파일 내에 만들어준다.
+
+* `/ansible/docker/tasks` 경로로 `mkdir`
+
+* 해당 경로에 main.yml 생성( `sudo` )
+
+* `main.yml`파일에 다음과같이 작성한다.
+
+  ![스크린샷, 2020-07-31 17-42-15](https://user-images.githubusercontent.com/58680504/89017474-516cff00-d355-11ea-89ee-4d9c4f57ad34.png)
+
+
+
+* `./vagrant ssh`로 접속, 
+* 가상 머신 내에서 ansible-playbook 명령어를 실행해준다.
+* 다음과 같이 실행되는 모습을 볼 수 있다.
+
+![스크린샷, 2020-07-31 15-55-46](https://user-images.githubusercontent.com/58680504/89017455-4d40e180-d355-11ea-8fc4-e452cce33c56.png)
+
+
+
+
+
+* `docker --version`으로 잘 설치가 되었는지 확인한다.
+
+![스크린샷, 2020-07-31 17-36-16](https://user-images.githubusercontent.com/58680504/89017457-4e720e80-d355-11ea-9140-3db509c47368.png)
+
+
+
+* docker-compose도 잘 설치가 되었는지 확인을 했는데, 다음과 같은 오류가 뜬다.
+* `ImportError: No module named zipp`
+
+![스크린샷, 2020-07-31 17-36-23](https://user-images.githubusercontent.com/58680504/89017459-4f0aa500-d355-11ea-8f14-42ed5a7dd335.png)
+
+
+
+* ` pip install zipp`을 시도, 모듈 설치
+
+![스크린샷, 2020-07-31 17-37-03](https://user-images.githubusercontent.com/58680504/89017462-4f0aa500-d355-11ea-9c92-05f6cc8c32bd.png)
+
+
+
+* 설치 실패 후, 업그레이드 하라고해서 추가적으로 업그레이드도 진행하였다.
+
+![스크린샷, 2020-07-31 17-37-11](https://user-images.githubusercontent.com/58680504/89017464-4fa33b80-d355-11ea-9c43-50bbdc48a8a5.png)
+
+
+
+* 업그레이드 후 설치가 잘 되었다.
+
+![스크린샷, 2020-07-31 17-37-29](https://user-images.githubusercontent.com/58680504/89017467-503bd200-d355-11ea-8fb5-b0f373cbcb6b.png)
+
+
+
+* 또 다른 모듈의 부재로 에러가 일어났다.
+
+![스크린샷, 2020-07-31 17-37-54](https://user-images.githubusercontent.com/58680504/89017469-503bd200-d355-11ea-84c6-3f564261b0a2.png)
+
+
+
+* 마찬가지로 pip로 설치를 시도하였다.
+
+![스크린샷, 2020-07-31 17-38-08](https://user-images.githubusercontent.com/58680504/89017471-50d46880-d355-11ea-92f4-51fdcd138d34.png)
+
+
+
+* 모든 모듈을 설치하고나니 docker-compose가 잘 설치된 것을 볼 수 있었다.
+
+![스크린샷, 2020-07-31 17-38-16](https://user-images.githubusercontent.com/58680504/89018047-30f17480-d356-11ea-91f9-c9a1549dd084.png)
 
